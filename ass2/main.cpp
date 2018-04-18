@@ -6,61 +6,75 @@
 #include <algorithm>
 #include <queue>
 
-int nodes = 0;
-int leaves = 0;
-int current_best = 0;
-int item_count = 0;
-Knapsack best;
+struct Solution{
+    int nodes, leaves;
+    Knapsack sack;
+};
 
-
-void write_output(Knapsack k, std::string path){
+void write_output(Solution s, std::string path){
     std::ofstream out(path);
-    out << best.items.size() << "," << current_best << "," << item_count <<'\n';
-    out << nodes << "," << leaves << '\n';
-    for(Item i: best.items){
+    out << s.sack.items.size() << "," << s.sack.get_val() 
+        << "," << s.sack.get_count() <<'\n';
+    out << s.nodes << "," << s.leaves << '\n';
+    for(Item i: s.sack.items){
         if(i.taken)
             out << i.weight << "," << i.profit << std::endl;
     }
 
 }
 
-int solve(Knapsack k){
+//solves knapsack problem with best firsts solution
+Solution solve(Knapsack k){
+    int current_best;
+    Solution s;
     std::priority_queue<Knapsack> q;
+
+    //initialize priority queue
     k.bound = k.greedy();
     q.push(k);
     while(!q.empty()){
-        nodes++;
-        //get top node
+        s.nodes++;
         k = q.top();
         q.pop();
 
-        //std::cout << "Value: "<<k.get_val() << std::endl;
-        //std::cout << "Greedy: "<<k.greedy() << std::endl;
-        //k.print();
+        //debug
+        //std::cout << k.full() << std::endl;
+        std::cout << current_best << std::endl;
+        std::cout << k.get_val() << std::endl;
+        std::cout << k.greedy() << std::endl;
+        k.print();
 
-        //check it isnt full or done with items
-        if(k.full() || k.level >= k.items.size()){
-            leaves++;
+        if(k.full()){
+            s.leaves++;
+            continue;
+        }
+        //only continue if the greedy solution is worse than current best
+        if(current_best >= k.greedy()){
+            s.leaves++;
             continue;
         }
 
         //calculate the current best value obtained
-        if(k.get_val() > current_best){
+        if(k.get_val() >= current_best){
             current_best = k.get_val();
-            item_count = k.get_count();
-            best = k;
+            s.sack = k;
         }
-        if(current_best > k.greedy()){
-            leaves++;
+
+        if(k.get_val() == k.greedy()){
+            s.leaves++;
+            continue;
+        }
+
+        //move to next item and check it isn't done
+        k.level++;
+        if(k.level >= k.items.size()){
+            s.leaves++;
             continue;
         }
 
         //Take the item and make another knapsack
         Knapsack k2 = k;
         k2.items[k2.level].taken = true;
-        //look at next item
-        k.level++;
-        k2.level++;
         //calculate bounds for deciding which to explore
         //this is for the priority queue to use
         k.bound = k.greedy();
@@ -69,7 +83,8 @@ int solve(Knapsack k){
         q.push(k);
         q.push(k2);
     }
-    return current_best;
+    //s.sack.print();
+    return s;
 }
 
 int main(int argc, char *argv[]){
@@ -83,11 +98,13 @@ int main(int argc, char *argv[]){
     input = std::string(argv[1]);
     output = std::string(argv[2]);
 
+    std::cout << input << " " << output << std::endl;
+
     Knapsack k(input);
     std::sort(k.items.begin(), k.items.end());
 
-    int s = solve(k);
-    write_output(k, output);
+    Solution s = solve(k);
+    write_output(s, output);
     
     return 0;
 }

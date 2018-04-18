@@ -6,7 +6,7 @@
 #include <sstream>
 #include <algorithm>
 
-Knapsack::Knapsack(std::string path):count(0), weight_limit(0), items(), level(0){
+Knapsack::Knapsack(std::string path):count(0), weight_limit(0), items(), level(-1){
     read(path);
 }
 
@@ -71,7 +71,7 @@ int Knapsack::greedy(){
     int profit = 0;
     bool filled = false;
     Item temp;
-    for (int i = level; i < items.size(); ++i) {
+    for (int i = level+1; i < items.size(); ++i) {
         if(weight + items[i].weight + get_weight() < weight_limit){
             weight += items[i].weight;
             profit += items[i].profit;
@@ -98,5 +98,6 @@ void Knapsack::print() const{
         std::cout << "Weight: " << i.weight << ", Value: " << i.profit <<
             ", Taken: " << i.taken << std::endl;
     }
+    std::cout << "Level: " <<level << std::endl;
     std::cout << '\n';
 }

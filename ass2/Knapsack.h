@@ -12,7 +12,7 @@ struct Knapsack{
     //list of items
     std::vector<Item> items;
     //which item is being considered
-    unsigned int level;
+    int level = -1;
     //bound for best first search
     int bound;
 
